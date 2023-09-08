@@ -25,7 +25,12 @@ To include the Serverless Application in your own SAM template.
     * LayerPackages - the packages that you would like to be included in your layer (using the same format as [pip](https://packaging.python.org/en/latest/tutorials/installing-packages/#use-pip-for-installing)
 1. Make sure when you deploy your SAM template the parameter ```--capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_IAM``` is passed to the SAM CLI
 
-###
+### Sample 
+In the [samples](https://github.com/peterjdavis/python-layer-builder/tree/main/samples) folder is an example SAM template which shows deploying the Serverless Application and using the generated Lambda Layer in a Lambda Function.
+
 # Known Issues
-1. The built layer must be less than 70,167,211 bytes as this is a limitation on the 
+1. The built layer must be less than 70,167,211 bytes as this is a limitation on the PublishLayerVersion API
+
+# Reporting Issues
+Please report any issues you find using in the [GitHub repository issue tracker](https://github.com/peterjdavis/python-layer-builder/issues) 
       

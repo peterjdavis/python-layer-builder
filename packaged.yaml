@@ -11,7 +11,7 @@ Metadata:
       '
     SpdxLicenseId: Apache-2.0
     LicenseUrl: s3://python-layer-builder/86d3f3a95c324c9479bd8986968f4327
-    ReadmeUrl: s3://python-layer-builder/06b0979dd3116f84f062ff8889311f26
+    ReadmeUrl: s3://python-layer-builder/147f32e044ce77818dd65eca1b83878d
     Labels:
     - layer
     - lambda
