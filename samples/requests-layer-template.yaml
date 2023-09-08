@@ -13,7 +13,7 @@ Resources:
     Type: AWS::Serverless::Application
     Properties:
       Location:
-        ApplicationId: arn:aws:serverlessrepo:eu-west-1:773427694428:applications/python3-11-arm64-layer-builder
+        ApplicationId: arn:aws:serverlessrepo:eu-west-1:345785723431:applications/python3-11-arm64-layer-builder
         SemanticVersion: !Ref PythonLayerBuilderVersion
       Parameters: 
         LayerName: Arm64RequestsLayer
