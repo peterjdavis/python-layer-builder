@@ -1,0 +1,31 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: Example template creating a layer with the requests python package
+
+Parameters:
+  PythonLayerBuilderVersion:
+    Description: Version of the python-layer-builder from the serverless application repository
+    Type: String
+    Default: 0.0.1
+
+Resources:
+  Arm64RequestsLayer:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location:
+        ApplicationId: arn:aws:serverlessrepo:eu-west-1:773427694428:applications/python3-11-arm64-layer-builder
+        SemanticVersion: !Ref PythonLayerBuilderVersion
+      Parameters: 
+        LayerName: Arm64RequestsLayer
+        LayerPackages: aws-requests-auth requests
+
+  DummyArm64Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/lambda/dummyFunction
+      Handler: index.lambda_handler
+      Runtime: python3.11
+      Architectures: 
+        - arm64
+      Layers:
+        - !Sub ${Arm64RequestsLayer.Outputs.LayerVersionArn}

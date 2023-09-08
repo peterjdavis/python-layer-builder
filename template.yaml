@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: Serverless Application for building python Lambda Layers in Lambda
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: python3-11-arm64-layer-builder
+    Author: Pete Davis
+    Description: >
+      Serverless Application for building python 3.11 arm64 Lambda Layers in Lambda
+    SpdxLicenseId: Apache-2.0
+    LicenseUrl: LICENSE
+    ReadmeUrl: README.md 
+    Labels: ['layer', 'lambda', 'python']
+    HomePageUrl: https://github.com/peterjdavis/python-layer-builder
+    SemanticVersion: 0.0.1
+    SourceCodeUrl: https://github.com/peterjdavis/python-layer-builder
+
+Parameters:
+  LayerName:
+    Description: The name of the layer to be created
+    Type: String
+
+  LayerPackages:
+    Description: The list of packages to be deployed using the same format as pip https://packaging.python.org/en/latest/tutorials/installing-packages/#use-pip-for-installing
+    Type: String
+
+Resources:
+  LayerBuilderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/lambda/LayerBuilderFunction
+      Handler: index.lambda_handler
+      Runtime: python3.11
+      Architectures: 
+        - arm64
+      MemorySize: 2048
+      Timeout: 60
+      Environment:
+        Variables:
+          LAYER_NAME: !Ref LayerName
+          LAYER_PACKAGES: !Ref LayerPackages
+          PYTHON_VERSION: python3.11
+          ARCHITECTURE: arm64
+      Policies:
+        - Version: '2012-10-17' 
+          Statement:
+            - Effect: Allow
+              Action: 
+                - lambda:PublishLayerVersion
+                - lambda:DeleteLayerVersion
+                - lambda:ListLayerVersions
+              Resource: '*'
+
+  LayerBuilderFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Delete
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${LayerBuilderFunction}
+
+  LayerBuilderVersionArn:
+    Type: AWS::CloudFormation::CustomResource
+    Properties:
+      ServiceToken: !Sub ${LayerBuilderFunction.Arn}
+
+Outputs:
+  LayerVersionArn:
+    Description: ARN for the layer version that has been created
+    Value: !Sub ${LayerBuilderVersionArn.LayerVersionArn}
+    
