@@ -6,7 +6,7 @@ Parameters:
   PythonLayerBuilderVersion:
     Description: Version of the python-layer-builder from the serverless application repository
     Type: String
-    Default: 0.0.1
+    Default: 1.0.0
 
 Resources:
   Arm64RequestsLayer:
