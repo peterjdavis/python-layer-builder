@@ -15,7 +15,7 @@ The Serverless Application can be installed using the console using the [Serverl
 1. You check progress of the deployment under the 'Deployment' tab of the window that is opened
 1. Once the deployment has finished you will be able to see the created Lambda Layer under the [Layers](https://console.aws.amazon.com/lambda/home?#/layers) section of the Lambda Console
 
-### Sam Deployment
+### SAM Deployment
 To include the Serverless Application in your own SAM template.
 1. On the 'Public Applications' tab search for "layer-builder" (make sure you have the 'Show apps that create custom IAM roles or resource policies' tick box ticked) and then click on the application
 1. Click the 'Copy as Sam Resource' button in the top right of the page
