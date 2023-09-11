@@ -11,13 +11,13 @@ Metadata:
       '
     SpdxLicenseId: Apache-2.0
     LicenseUrl: s3://python-layer-builder/86d3f3a95c324c9479bd8986968f4327
-    ReadmeUrl: s3://python-layer-builder/147f32e044ce77818dd65eca1b83878d
+    ReadmeUrl: s3://python-layer-builder/a9d7b1a6d1c7a475812e916d8eb21320
     Labels:
     - layer
     - lambda
     - python
     HomePageUrl: https://github.com/peterjdavis/python-layer-builder
-    SemanticVersion: '0.0.1'
+    SemanticVersion: 1.0.1
     SourceCodeUrl: https://github.com/peterjdavis/python-layer-builder
 Parameters:
   LayerName:
@@ -31,7 +31,35 @@ Resources:
   LayerBuilderFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://python-layer-builder/e0fa6c7f77938a647d6c1f050ad4039c
+      InlineCode: "import cfnresponse\nimport os\nimport shutil\nimport boto3\nimport\
+        \ logging\n\nLAYER_NAME = os.environ['LAYER_NAME']\nLAYER_PACKAGES = os.environ['LAYER_PACKAGES']\n\
+        PYTHON_VERSION = os.environ['PYTHON_VERSION']\nARCHITECTURE = os.environ['ARCHITECTURE']\n\
+        \nlogger = logging.getLogger()\nlogger.setLevel(logging.INFO)\n\nlambda_client\
+        \ = boto3.client('lambda')\n\ndef lambda_handler(event, context):\n    responseData\
+        \ = {}\n    if event['RequestType'] == 'Delete':\n        try:\n         \
+        \   delete_layer()\n            responseData = {'success': 'true'}\n     \
+        \   except Exception as e:\n            responseData = {'error': str(e)}\n\
+        \            cfnresponse.send(event, context, cfnresponse.FAILED, responseData)\n\
+        \            return\n    if event['RequestType'] == 'Create':\n        try:\n\
+        \            layer_version_arn = build_layer()\n            responseData['LayerVersionArn']\
+        \ = layer_version_arn\n        except Exception as e:\n            responseData\
+        \ = {'error': str(e)}\n            cfnresponse.send(event, context, cfnresponse.FAILED,\
+        \ responseData)\n            return\n    cfnresponse.send(event, context,\
+        \ cfnresponse.SUCCESS, responseData)\n\ndef build_layer():\n    os.system(f'cd\
+        \ /tmp; python -m venv {LAYER_NAME}/python; source {LAYER_NAME}/python/bin/activate;\
+        \ python -m pip install {LAYER_PACKAGES}')\n    shutil.make_archive(f'/tmp/{LAYER_NAME}',\
+        \ 'zip', f'/tmp/{LAYER_NAME}')\n    with open(f'/tmp/{LAYER_NAME}.zip', 'rb')\
+        \ as layer_zip:\n        response = lambda_client.publish_layer_version(\n\
+        \            LayerName=LAYER_NAME,\n            Content={\n              \
+        \  'ZipFile': layer_zip.read()\n            },\n            CompatibleRuntimes=[\n\
+        \                PYTHON_VERSION\n            ],\n            CompatibleArchitectures=[\n\
+        \                ARCHITECTURE,\n            ]\n        )\n    return (response['LayerVersionArn'])\n\
+        \ndef delete_layer():\n    response = lambda_client.list_layer_versions(\n\
+        \        LayerName=LAYER_NAME\n    )\n\n    for layer_version in response['LayerVersions']:\n\
+        \        logger.info(f'Deleting layer version {layer_version[\"Version\"]}')\n\
+        \        response = lambda_client.delete_layer_version(\n            LayerName=LAYER_NAME,\n\
+        \            VersionNumber=layer_version['Version']\n        )\n        logger.info(f'Delete\
+        \ response: {response}')\n"
       Handler: index.lambda_handler
       Runtime: python3.11
       Architectures:
