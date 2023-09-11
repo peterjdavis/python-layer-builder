@@ -2,8 +2,10 @@
 When authoring a Lambda function it may require dependencies which require building and deploying with the function or as a layer.  This Serverless Application uses Lambda to build a Lambda Layer containing your dependencies removing the need for you to package them locally and upload them.
 
 To prevent multiple Lambdas being created in accounts, I've created multiple version of the application for different python runtimes and architectures:
-* python3-11-arm64-layer-builder - python3.11 ARM
-* python3-11-x8664-layer-builder - python3.11 x86_64
+* python3-11-arm64-layer-builder - python3.11 arm64
+* python3-11-x86-64-layer-builder - python3.11 x86_64
+* python3-10-arm64-layer-builder - python3.10 arm64
+* python3-10-x86-64-layer-builder - python3.10 x86_64
 
 # Instructions
 
@@ -26,7 +28,7 @@ To include the Serverless Application in your own SAM template.
 1. Make sure when you deploy your SAM template the parameter ```--capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_IAM``` is passed to the SAM CLI
 
 ### Sample 
-In the [samples](https://github.com/peterjdavis/python-layer-builder/tree/main/samples) folder is an example SAM template which shows deploying the Serverless Application and using the generated Lambda Layer in a Lambda Function.
+In the [samples](https://github.com/peterjdavis/python-layer-builder/tree/main/samples) folder is an example SAM and CloudFormation template which shows deploying the Serverless Application and using the generated Lambda Layer in a Lambda Function.  **Note** the CloudFormation template still requires the transform for the AWS::ServerlessRepo::Application resource as there are no permissions for CloudFormation to access the resources outside of the Serverless Application Repository i.e. using a nested stack.
 
 # Known Issues
 1. The built layer must be less than 70,167,211 bytes as this is a limitation on the PublishLayerVersion API

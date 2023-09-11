@@ -4,10 +4,10 @@ Description: Serverless Application for building python Lambda Layers in Lambda
 
 Metadata:
   AWS::ServerlessRepo::Application:
-    Name: python3-11-arm64-layer-builder
+    Name: python%layer-label%-layer-builder
     Author: Pete Davis
     Description: >
-      Serverless Application for building python 3.11 arm64 Lambda Layers in Lambda
+      Serverless Application for building python %python-version-desc% %architecture% Lambda Layers in Lambda
     SpdxLicenseId: Apache-2.0
     LicenseUrl: LICENSE
     ReadmeUrl: README.md 
@@ -98,17 +98,17 @@ Resources:
                 logger.info(f'Delete response: {response}')
 
       Handler: index.lambda_handler
-      Runtime: python3.11
+      Runtime: python%python-version-desc%
       Architectures: 
-        - arm64
+        - %architecture%
       MemorySize: 2048
       Timeout: 60
       Environment:
         Variables:
           LAYER_NAME: !Ref LayerName
           LAYER_PACKAGES: !Ref LayerPackages
-          PYTHON_VERSION: python3.11
-          ARCHITECTURE: arm64
+          PYTHON_VERSION: python%python-version-desc%
+          ARCHITECTURE: %architecture%
       Policies:
         - Version: '2012-10-17' 
           Statement:

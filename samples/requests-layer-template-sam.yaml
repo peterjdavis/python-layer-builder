@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: Example template creating a layer with the requests python package
+
+Parameters:
+  PythonLayerBuilderVersion:
+    Description: Version of the python-layer-builder from the serverless application repository
+    Type: String
+    Default: 1.0.1
+
+Resources:
+  Python311Arm64RequestsLayer:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location:
+        ApplicationId: arn:aws:serverlessrepo:eu-west-1:345785723431:applications/python3-11-arm64-layer-builder
+        SemanticVersion: !Ref PythonLayerBuilderVersion
+      Parameters: 
+        LayerName: Python311Arm64RequestsLayer
+        LayerPackages: aws-requests-auth requests
+
+  DummyPython311Arm64Function:
+    Type: AWS::Serverless::Function
+    Metadata:
+      InlineSAMFunction: true
+    Properties:
+      CodeUri: src/lambda/dummyFunction
+      Handler: index.lambda_handler
+      Runtime: python3.11
+      Architectures: 
+        - arm64
+      Layers:
+        - !Sub ${Python311Arm64RequestsLayer.Outputs.LayerVersionArn}
+
+  Python310Arm64RequestsLayer:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location:
+        ApplicationId: arn:aws:serverlessrepo:eu-west-1:345785723431:applications/python3-10-arm64-layer-builder
+        SemanticVersion: !Ref PythonLayerBuilderVersion
+      Parameters: 
+        LayerName: Python310Arm64RequestsLayer
+        LayerPackages: aws-requests-auth requests
+
+  DummyPython310Arm64Function:
+    Type: AWS::Serverless::Function
+    Metadata:
+      InlineSAMFunction: true
+    Properties:
+      CodeUri: src/lambda/dummyFunction
+      Handler: index.lambda_handler
+      Runtime: python3.10
+      Architectures: 
+        - arm64
+      Layers:
+        - !Sub ${Python310Arm64RequestsLayer.Outputs.LayerVersionArn}
+
+  Python311x8664RequestsLayer:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location:
+        ApplicationId: arn:aws:serverlessrepo:eu-west-1:345785723431:applications/python3-11-x86-64-layer-builder
+        SemanticVersion: !Ref PythonLayerBuilderVersion
+      Parameters: 
+        LayerName: Python311x8664RequestsLayer
+        LayerPackages: aws-requests-auth requests
+
+  DummyPython311x8664Function:
+    Type: AWS::Serverless::Function
+    Metadata:
+      InlineSAMFunction: true
+    Properties:
+      CodeUri: src/lambda/dummyFunction
+      Handler: index.lambda_handler
+      Runtime: python3.11
+      Architectures: 
+        - arm64
+      Layers:
+        - !Sub ${Python311x8664RequestsLayer.Outputs.LayerVersionArn}
+
+  Python310x8664RequestsLayer:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location:
+        ApplicationId: arn:aws:serverlessrepo:eu-west-1:345785723431:applications/python3-10-x86-64-layer-builder
+        SemanticVersion: !Ref PythonLayerBuilderVersion
+      Parameters: 
+        LayerName: Python310x8664RequestsLayer
+        LayerPackages: aws-requests-auth requests
+
+  DummyPython310x8664Function:
+    Type: AWS::Serverless::Function
+    Metadata:
+      InlineSAMFunction: true
+    Properties:
+      CodeUri: src/lambda/dummyFunction
+      Handler: index.lambda_handler
+      Runtime: python3.10
+      Architectures: 
+        - arm64
+      Layers:
+        - !Sub ${Python310x8664RequestsLayer.Outputs.LayerVersionArn}

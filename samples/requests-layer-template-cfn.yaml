@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: Example template creating a layer with the requests python package
+Parameters:
+  PythonLayerBuilderVersion:
+    Description: Version of the python-layer-builder from the serverless application repository
+    Type: String
+    Default: 1.0.1
+
+Resources:
+  DummyArm64Function:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: |
+          import requests
+
+          def lambda_handler(event, context):
+
+              url = 'https://www.amazon.co.uk'
+              response = requests.get(url)
+
+              return {"statusCode": 200,
+                      "body": response.text}
+
+      Handler: index.lambda_handler
+      Role: !GetAtt 'DummyArm64FunctionRole.Arn'
+      Runtime: python3.11
+      Layers:
+        - !Sub '${Arm64RequestsLayer.Outputs.LayerVersionArn}'
+      Architectures:
+        - arm64
+
+  DummyArm64FunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  Arm64RequestsLayer:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location:
+        ApplicationId: arn:aws:serverlessrepo:eu-west-1:345785723431:applications/python3-11-arm64-layer-builder
+        SemanticVersion: !Ref PythonLayerBuilderVersion
+      Parameters: 
+        LayerName: Arm64RequestsLayer
+        LayerPackages: aws-requests-auth requests
