@@ -2,3 +2,5 @@
 .aws-sam
 .DS_Store
 .vscode
+.envrc
+packaged.yaml

@@ -13,7 +13,7 @@ Metadata:
     ReadmeUrl: README.md 
     Labels: ['layer', 'lambda', 'python']
     HomePageUrl: https://github.com/peterjdavis/python-layer-builder
-    SemanticVersion: 1.0.2
+    SemanticVersion: 1.0.3
     SourceCodeUrl: https://github.com/peterjdavis/python-layer-builder
 
 Parameters:
@@ -25,90 +25,32 @@ Parameters:
     Description: The list of packages to be deployed using the same format as pip https://packaging.python.org/en/latest/tutorials/installing-packages/#use-pip-for-installing
     Type: String
 
+  # TempS3BucketName:
+  #   Description: Name of a temp S3 bucket that will be created and deleted during the deployment. This is used to store the packages if they are > 50MB.
+  #   Type: String
+  #   Default: ''
+
 Resources:
   LayerBuilderFunction:
     Type: AWS::Serverless::Function
     Properties:
-      InlineCode: |
-        import cfnresponse
-        import os
-        import shutil
-        import boto3
-        import logging
-
-        LAYER_NAME = os.environ['LAYER_NAME']
-        LAYER_PACKAGES = os.environ['LAYER_PACKAGES']
-        PYTHON_VERSION = os.environ['PYTHON_VERSION']
-        ARCHITECTURE = os.environ['ARCHITECTURE']
-
-        logger = logging.getLogger()
-        logger.setLevel(logging.INFO)
-
-        lambda_client = boto3.client('lambda')
-
-        def lambda_handler(event, context):
-            responseData = {}
-            if event['RequestType'] == 'Delete':
-                try:
-                    delete_layer()
-                    responseData = {'success': 'true'}
-                except Exception as e:
-                    responseData = {'error': str(e)}
-                    cfnresponse.send(event, context, cfnresponse.FAILED, responseData)
-                    return
-            if event['RequestType'] == 'Create':
-                try:
-                    layer_version_arn = build_layer()
-                    responseData['LayerVersionArn'] = layer_version_arn
-                except Exception as e:
-                    responseData = {'error': str(e)}
-                    cfnresponse.send(event, context, cfnresponse.FAILED, responseData)
-                    return
-            cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
-
-        def build_layer():
-            os.system(f'cd /tmp; python -m venv {LAYER_NAME}/python; source {LAYER_NAME}/python/bin/activate; python -m pip install {LAYER_PACKAGES}')
-            shutil.make_archive(f'/tmp/{LAYER_NAME}', 'zip', f'/tmp/{LAYER_NAME}')
-            with open(f'/tmp/{LAYER_NAME}.zip', 'rb') as layer_zip:
-                response = lambda_client.publish_layer_version(
-                    LayerName=LAYER_NAME,
-                    Content={
-                        'ZipFile': layer_zip.read()
-                    },
-                    CompatibleRuntimes=[
-                        PYTHON_VERSION
-                    ],
-                    CompatibleArchitectures=[
-                        ARCHITECTURE,
-                    ]
-                )
-            return (response['LayerVersionArn'])
-
-        def delete_layer():
-            response = lambda_client.list_layer_versions(
-                LayerName=LAYER_NAME
-            )
-
-            for layer_version in response['LayerVersions']:
-                logger.info(f'Deleting layer version {layer_version["Version"]}')
-                response = lambda_client.delete_layer_version(
-                    LayerName=LAYER_NAME,
-                    VersionNumber=layer_version['Version']
-                )
-                logger.info(f'Delete response: {response}')
-
+      CodeUri: src/lambda/LayerBuilderFunction
       Handler: index.lambda_handler
       Runtime: python%python-version-desc%
       Architectures: 
         - %architecture%
       MemorySize: 2048
-      Timeout: 60
+      Timeout: 120
       Environment:
         Variables:
           LAYER_NAME: !Ref LayerName
           LAYER_PACKAGES: !Ref LayerPackages
           PYTHON_VERSION: python%python-version-desc%
           ARCHITECTURE: %architecture%
+          # TEMP_S3_BUCKET_NAME: !Join ['-', ['temp-bucket', !Select [4, !Split ['-', !Select [2, !Split ['/', !Ref AWS::StackId]]]], !Ref AWS::Region, !Ref AWS::AccountId]]
+          TEMP_S3_BUCKET_NAME: !Sub 
+            - temp-bucket-${UniqueId}-${AWS::Region}-${AWS::AccountId}
+            - UniqueId: !Select [4, !Split ['-', !Select [2, !Split ['/', !Ref AWS::StackId]]]]
       Policies:
         - Version: '2012-10-17' 
           Statement:
@@ -118,15 +60,35 @@ Resources:
                 - lambda:DeleteLayerVersion
                 - lambda:ListLayerVersions
               Resource: '*'
+            - Effect: Allow
+              Action: 
+                - s3:CreateBucket
+                - s3:DeleteBucket
+              Resource: !Sub 
+                - arn:${AWS::Partition}:s3:::${BucketName}
+                - BucketName: !Sub 
+                  - temp-bucket-${UniqueId}-${AWS::Region}-${AWS::AccountId}
+                  - UniqueId: !Select [4, !Split ['-', !Select [2, !Split ['/', !Ref AWS::StackId]]]]
+            - Effect: Allow
+              Action: 
+                - s3:GetObject
+                - s3:PutObject
+                - s3:DeleteObject
+              Resource: !Sub 
+                - arn:${AWS::Partition}:s3:::${BucketName}
+                - BucketName: !Sub 
+                  - temp-bucket-${UniqueId}-${AWS::Region}-${AWS::AccountId}/*
+                  - UniqueId: !Select [4, !Split ['-', !Select [2, !Split ['/', !Ref AWS::StackId]]]]
 
   LayerBuilderFunctionLogGroup:
     Type: AWS::Logs::LogGroup
-    DeletionPolicy: Delete
+    # DeletionPolicy: Delete
     Properties:
       LogGroupName: !Sub /aws/lambda/${LayerBuilderFunction}
 
   LayerBuilderVersionArn:
     Type: AWS::CloudFormation::CustomResource
+    DependsOn: LayerBuilderFunctionLogGroup
     Properties:
       ServiceToken: !Sub ${LayerBuilderFunction.Arn}
 

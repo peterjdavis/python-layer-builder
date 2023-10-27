@@ -30,9 +30,6 @@ To include the Serverless Application in your own SAM template.
 ### Sample 
 In the [samples](https://github.com/peterjdavis/python-layer-builder/tree/main/samples) folder is an example SAM and CloudFormation template which shows deploying the Serverless Application and using the generated Lambda Layer in a Lambda Function.  **Note** the CloudFormation template still requires the transform for the AWS::ServerlessRepo::Application resource as there are no permissions for CloudFormation to access the resources outside of the Serverless Application Repository i.e. using a nested stack.
 
-# Known Issues
-1. The built layer must be less than 70,167,211 bytes as this is a limitation on the PublishLayerVersion API
-
 # Reporting Issues
 Please report any issues you find using in the [GitHub repository issue tracker](https://github.com/peterjdavis/python-layer-builder/issues) 
       

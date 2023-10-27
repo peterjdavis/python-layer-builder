@@ -30,6 +30,19 @@ package : update-variables
 				--s3-bucket python-layer-builder
 	rm template-processed.yaml
 
+.PHONY : deploy
+deploy : package
+	sam deploy --template packaged.yaml \
+			   --stack-name layer-builder-dev \
+			   --capabilities CAPABILITY_IAM \
+			   --parameter-overrides LayerPackages=requests \
+			                         LayerName=my-requests-layer \
+			   --region eu-west-1 
+.PHONY : delete
+delete :
+	sam delete --stack-name layer-builder-dev \
+			   --region eu-west-1 
+
 .PHONY : publish
 publish : package
 	sam publish --template packaged.yaml --region eu-west-1
