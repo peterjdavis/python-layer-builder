@@ -13,7 +13,7 @@ Metadata:
     ReadmeUrl: README.md 
     Labels: ['layer', 'lambda', 'python']
     HomePageUrl: https://github.com/peterjdavis/python-layer-builder
-    SemanticVersion: 1.0.3
+    SemanticVersion: 1.0.7
     SourceCodeUrl: https://github.com/peterjdavis/python-layer-builder
 
 Parameters:
@@ -24,11 +24,6 @@ Parameters:
   LayerPackages:
     Description: The list of packages to be deployed using the same format as pip https://packaging.python.org/en/latest/tutorials/installing-packages/#use-pip-for-installing
     Type: String
-
-  # TempS3BucketName:
-  #   Description: Name of a temp S3 bucket that will be created and deleted during the deployment. This is used to store the packages if they are > 50MB.
-  #   Type: String
-  #   Default: ''
 
 Resources:
   LayerBuilderFunction:
@@ -47,7 +42,6 @@ Resources:
           LAYER_PACKAGES: !Ref LayerPackages
           PYTHON_VERSION: python%python-version-desc%
           ARCHITECTURE: %architecture%
-          # TEMP_S3_BUCKET_NAME: !Join ['-', ['temp-bucket', !Select [4, !Split ['-', !Select [2, !Split ['/', !Ref AWS::StackId]]]], !Ref AWS::Region, !Ref AWS::AccountId]]
           TEMP_S3_BUCKET_NAME: !Sub 
             - temp-bucket-${UniqueId}-${AWS::Region}-${AWS::AccountId}
             - UniqueId: !Select [4, !Split ['-', !Select [2, !Split ['/', !Ref AWS::StackId]]]]
