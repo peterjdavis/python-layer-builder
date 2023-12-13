@@ -39,8 +39,21 @@ def lambda_handler(event, context):
 
 def build_layer():
     os.system(f'cd /tmp; python -m venv {LAYER_NAME}/python; source {LAYER_NAME}/python/bin/activate; python -m pip install {LAYER_PACKAGES}')
-    shutil.make_archive(f'/tmp/{LAYER_NAME}', 'zip', f'/tmp/{LAYER_NAME}')
+    
+    # Find the site-packages directory
+    site_packages_path = f'/tmp/{LAYER_NAME}/lib/python{PYTHON_VERSION}/site-packages'
 
+    # Create new directory for the layer
+    new_python_dir = f'/tmp/{LAYER_NAME}/python'
+    os.makedirs(new_python_dir, exist_ok=True)
+    
+    # Move contents from site-packages to the new python directory
+    for item in os.listdir(site_packages_path):
+        shutil.move(os.path.join(site_packages_path, item), new_python_dir)
+
+    # Create the ZIP file
+    shutil.make_archive(f'/tmp/{LAYER_NAME}', 'zip', '/tmp', f'{LAYER_NAME}/python')
+    
     # Get the size of the zipped file
     zip_stats = os.stat(f'/tmp/{LAYER_NAME}.zip')
     zip_size = zip_stats.st_size / (1024 * 1024)
